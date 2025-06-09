@@ -1,5 +1,6 @@
 package io.github.some_example_name
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.graphics.OrthographicCamera
@@ -45,6 +46,10 @@ class GameScreen: Screen
     private var WorldWidth = 3000f
     private var WorldHeight = 3000f
 
+    private lateinit var stage: Stage
+    private lateinit var touchpad: Touchpad
+    private lateinit var touchpadBg: Drawable
+    private lateinit var touchpadKnob: Drawable
 
     override fun dispose()
     {
@@ -62,15 +67,25 @@ class GameScreen: Screen
         viewport = ScreenViewport(camera)
         shapeRenderer = ShapeRenderer()
         player = Player()
-//        renderer.setView(camera)
 
-//        assetManager = AssetManager()
-////
-//        assetManager.load("GameMap.tmx", )
-//
-//        assetManager.finishLoading()
+        //Joystick Setup
+        stage = Stage(ScreenViewport())
 
-//        val texture = Texture("Castle2.png")
+        val bgTexture = Texture("JoystickSplitted.png")
+        val knobTexture = Texture("LargeHandleFilledGrey.png")
+        touchpadBg = TextureRegionDrawable(TextureRegion(bgTexture))
+        touchpadKnob = TextureRegionDrawable(TextureRegion(knobTexture))
+
+        val touchpadStyle = Touchpad.TouchpadStyle()
+        touchpadStyle.background = touchpadBg
+        touchpadStyle.knob = touchpadKnob
+
+        touchpad = Touchpad(10f, touchpadStyle) // 10 is deadzone
+        touchpad.setBounds(50f, 50f, 200f, 200f) // Position and size
+        stage.addActor(touchpad)
+
+        Gdx.input.inputProcessor = stage
+
     }
 
     override fun render(delta: Float)
@@ -78,18 +93,30 @@ class GameScreen: Screen
         world.step(delta,6,2)
         player.update(delta)
 
+        //Get joystick direction
+        val knobX = touchpad.knobPercentX
+        val knobY = touchpad.knobPercentY
+        val speed = 200f * delta
+
+        PlayerX += knobX * speed
+        PlayerY += knobY * speed
+
         ScreenUtils.clear(0f,0f,0f,1f)
-        batch.begin()
 
         camera.position.x = PlayerX.coerceIn(ScreenWidth/2, WorldWidth - ScreenWidth/2)
         camera.position.y = PlayerY.coerceIn(ScreenHeight/2, WorldHeight-ScreenHeight/2 )
-
         camera.update()
+
         renderer.setView(camera)
         renderer.render()
 
+        batch.begin()
 //        player.draw(batch)
         batch.end()
+
+        //Draw Joystick
+        stage.act(delta)
+        stage.draw()
     }
 
     override fun resize(width: Int, height: Int)
