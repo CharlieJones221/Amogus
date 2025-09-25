@@ -18,6 +18,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.ScreenUtils
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import io.github.some_example_name.Player
+import org.omg.CORBA.portable.OutputStream
+import java.net.Socket
+import java.sql.DriverManager.println
 
 class GameScreen : Screen {
 
@@ -34,6 +37,9 @@ class GameScreen : Screen {
     private lateinit var stage: Stage
     private lateinit var touchpad: Touchpad
 
+    //client-server
+    lateinit var clientSocket : Socket
+
     // Screen/world sizing
     private var PlayerX = 1500f
     private var PlayerY = 1500f
@@ -43,6 +49,14 @@ class GameScreen : Screen {
     private val WorldHeight = 3000f
 
     override fun show() {
+        val clientSocket = Socket("152.105.66.105", 4300)
+        val outputStream: java.io.OutputStream = clientSocket.outputStream
+        println("Connected to server")
+        outputStream.write(5318008)
+        outputStream.flush()
+
+
+
         // World and camera setup
         world = World(Vector2(0f, -9.8f), true)
         camera = OrthographicCamera()
@@ -123,5 +137,6 @@ class GameScreen : Screen {
         player.dispose()
         renderer.dispose()
         map.dispose()
+        clientSocket.close()
     }
 }
